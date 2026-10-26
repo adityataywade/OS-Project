@@ -97,7 +97,7 @@
   function setView(view) {
     currentView = view;
     $$('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
-    $('#pageCrumb').textContent = ({ dashboard:'Overview', cpu:'CPU Scheduling', memory:'Page Replacement', disk:'Disk Scheduling', banker:'Deadlock Avoidance', sync:'Synchronization', files:'File Allocation', concepts:'OS Concepts' })[view] || 'Overview';
+    $('#pageCrumb').textContent = ({ dashboard:'Overview', cpu:'CPU Scheduling', memory:'Page Replacement', disk:'Disk Scheduling', banker:'Deadlock Avoidance', sync:'Synchronization', files:'File Allocation', cpp:'C++ Practical Guide', concepts:'OS Concepts' })[view] || 'Overview';
     $('#sidebar').classList.remove('open');
     if (view === 'dashboard') renderDashboard();
     else if (view === 'cpu') renderCpu();
@@ -106,6 +106,7 @@
     else if (view === 'banker') renderBanker();
     else if (view === 'sync') renderSync();
     else if (view === 'files') renderFileAllocation();
+    else if (view === 'cpp') renderCppGuide();
     else renderConcepts();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -164,7 +165,7 @@
     return cpuProcesses.map((p, i) => `<tr data-pid="${esc(p.id)}"><td><span class="process-id"><i class="process-dot" style="--pc:${processColor(p.id)}"></i>${esc(p.id)}</span></td><td><input type="number" min="0" max="100000" step="1" data-prop="arrival" aria-label="${p.id} arrival time" value="${p.arrival}"></td><td><input type="number" min="1" max="1000" step="1" data-prop="burst" aria-label="${p.id} burst time" value="${p.burst}"></td><td><input type="number" min="1" max="100000" step="1" data-prop="priority" aria-label="${p.id} priority" value="${p.priority}"></td><td><button class="delete-row" data-remove-pid="${esc(p.id)}" aria-label="Remove ${esc(p.id)}" title="Remove process">×</button></td></tr>`).join('');
   }
   function renderCpu() {
-    $('#appContent').innerHTML = `${heading('PROCESS MANAGEMENT / LAB 01','CPU Scheduling Simulator','Edit a process workload, choose a scheduling policy, and inspect exactly how the CPU is assigned over time.', '<button class="btn" id="cpuExportBtn" '+(cpuResult?'':'disabled')+'>↓ Export CSV</button><button class="btn" id="cpuSampleBtn">↺ Load sample</button><button class="btn btn-primary" id="cpuRunTop">Run simulation →</button>')}
+    $('#appContent').innerHTML = `${heading('PROCESS MANAGEMENT / LAB 01','CPU Scheduling Simulator','Edit a process workload, choose a scheduling policy, and inspect exactly how the CPU is assigned over time.', '<button class="btn" id="cpuCppBtn">&lt;/&gt; View C++ practical</button><button class="btn" id="cpuExportBtn" '+(cpuResult?'':'disabled')+'>↓ Export CSV</button><button class="btn" id="cpuSampleBtn">↺ Load sample</button><button class="btn btn-primary" id="cpuRunTop">Run simulation →</button>')}
       <div class="workspace-grid">
         <div class="stack">
           ${panel('01 / Process workload','Arrival = when a process joins the ready queue. Lower priority number means higher priority.', `<div class="table-wrap"><table class="data-table"><thead><tr><th>Process</th><th>Arrival</th><th>Burst</th><th>Priority</th><th></th></tr></thead><tbody id="cpuProcessBody">${processRowsHtml()}</tbody></table></div><div class="form-actions" style="margin-top:10px;padding-top:10px"><button class="btn" id="cpuAddBtn">＋ Add process</button><span class="inline-tip">Use positive burst times and non-negative arrivals.</span></div>`)}
@@ -312,6 +313,7 @@
   }
   function bindCpuEvents() {
     const sample = () => { cpuProcesses = CPU_SAMPLE.map(p=>({...p})); cpuAlgorithm='fcfs'; cpuQuantum=2; cpuResult=null; renderCpu(); showToast('Sample loaded','Default four-process workload restored.'); };
+    $('#cpuCppBtn')?.addEventListener('click', () => setView('cpp'));
     $('#cpuExportBtn')?.addEventListener('click', exportCpuCsv);
     $('#cpuSampleBtn')?.addEventListener('click', sample);
     $('#cpuResetBtn')?.addEventListener('click', sample);
@@ -978,6 +980,196 @@
   function exportBankerCsv() {
     if (!bankerResult) return;
     downloadCsv('os-lab-bankers-safety-trace.csv',['Step','Process','Need Vector','Work Before','Work After','Safe State'],bankerResult.steps.map((s,i)=>[i+1,`P${s.process}`,`[${s.need.join(' ')}]`,`[${s.before.join(' ')}]`,`[${s.after.join(' ')}]`,bankerResult.safe?'SAFE':'UNSAFE']));
+  }
+
+  // ------------------------------- C++ PRACTICAL GUIDE -------------------------------
+  const CPP_PRACTICALS = {
+    fcfs: {
+      label: 'FCFS CPU Scheduling',
+      summary: 'First Come, First Served runs processes in increasing arrival order. It is simple and non-preemptive, so the selected process keeps the CPU until its burst is complete.',
+      steps: [
+        ['01', 'Read the process table', 'Store each process with its ID, arrival time, and burst time.'],
+        ['02', 'Sort by arrival time', 'The process that entered the ready queue first gets the first chance to run.'],
+        ['03', 'Execute to completion', 'Move the current time forward by the process burst time and record its completion time.'],
+        ['04', 'Calculate metrics', 'Turnaround = completion − arrival; waiting = turnaround − burst.']
+      ],
+      code: `#include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Process {
+    int id, arrival, burst, completion, waiting, turnaround;
+};
+
+int main() {
+    vector<Process> p = {{1, 0, 7}, {2, 2, 4}, {3, 4, 1}, {4, 5, 4}};
+    sort(p.begin(), p.end(), [](const Process& a, const Process& b) {
+        return a.arrival < b.arrival;
+    });
+
+    int time = 0;
+    double totalWaiting = 0, totalTurnaround = 0;
+    for (auto& job : p) {
+        time = max(time, job.arrival);
+        time += job.burst;
+        job.completion = time;
+        job.turnaround = job.completion - job.arrival;
+        job.waiting = job.turnaround - job.burst;
+        totalWaiting += job.waiting;
+        totalTurnaround += job.turnaround;
+    }
+
+    cout << "PID\\tCT\\tTAT\\tWT\\n";
+    for (const auto& job : p)
+        cout << "P" << job.id << "\\t" << job.completion << "\\t"
+             << job.turnaround << "\\t" << job.waiting << "\\n";
+    cout << fixed << setprecision(2)
+         << "Average WT: " << totalWaiting / p.size() << "\\n"
+         << "Average TAT: " << totalTurnaround / p.size() << "\\n";
+}`
+    },
+    sjf: {
+      label: 'SJF CPU Scheduling',
+      summary: 'Shortest Job First selects the arrived process with the smallest burst time. This version is non-preemptive: once selected, a process runs to completion.',
+      steps: [
+        ['01', 'Find arrived processes', 'At the current time, inspect only processes whose arrival time is less than or equal to the clock.'],
+        ['02', 'Choose the shortest burst', 'Select the ready process with the smallest burst time; break ties by arrival time.'],
+        ['03', 'Run without interruption', 'Advance the clock by the selected burst and mark the process complete.'],
+        ['04', 'Repeat and measure', 'Continue until every process finishes, then calculate waiting and turnaround averages.']
+      ],
+      code: `#include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+struct Process {
+    int id, arrival, burst, completion = 0;
+    bool done = false;
+};
+
+int main() {
+    vector<Process> p = {{1, 0, 7}, {2, 2, 4}, {3, 4, 1}, {4, 5, 4}};
+    int time = 0, completed = 0;
+    double totalWaiting = 0, totalTurnaround = 0;
+
+    while (completed < static_cast<int>(p.size())) {
+        int chosen = -1;
+        for (int i = 0; i < static_cast<int>(p.size()); ++i) {
+            if (!p[i].done && p[i].arrival <= time &&
+                (chosen == -1 || p[i].burst < p[chosen].burst))
+                chosen = i;
+        }
+        if (chosen == -1) {
+            ++time; // CPU is idle until the next process arrives.
+            continue;
+        }
+        time += p[chosen].burst;
+        p[chosen].completion = time;
+        p[chosen].done = true;
+        ++completed;
+        int turnaround = time - p[chosen].arrival;
+        int waiting = turnaround - p[chosen].burst;
+        totalWaiting += waiting;
+        totalTurnaround += turnaround;
+        cout << "P" << p[chosen].id << " completed at " << time
+             << " (WT=" << waiting << ", TAT=" << turnaround << ")\\n";
+    }
+    cout << fixed << setprecision(2)
+         << "Average WT: " << totalWaiting / p.size() << "\\n"
+         << "Average TAT: " << totalTurnaround / p.size() << "\\n";
+}`
+    },
+    rr: {
+      label: 'Round Robin CPU Scheduling',
+      summary: 'Round Robin gives each ready process a fixed time quantum. A process that is not finished goes to the back of the ready queue, giving every process a fair turn.',
+      steps: [
+        ['01', 'Create the ready queue', 'Add processes as they arrive, preserving their queue order.'],
+        ['02', 'Dispatch one quantum', 'Run the front process for min(quantum, remaining burst) time units.'],
+        ['03', 'Re-queue unfinished work', 'If remaining burst is greater than zero, place the process at the back of the queue.'],
+        ['04', 'Record completion', 'When remaining time reaches zero, calculate completion, turnaround, and waiting time.']
+      ],
+      code: `#include <iomanip>
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+struct Process {
+    int id, arrival, burst, remaining, completion = 0;
+};
+
+int main() {
+    vector<Process> p = {{1, 0, 7, 7}, {2, 2, 4, 4},
+                         {3, 4, 1, 1}, {4, 5, 4, 4}};
+    const int quantum = 2;
+    queue<int> ready;
+    int time = 0, completed = 0;
+    vector<bool> queued(p.size(), false);
+
+    while (completed < static_cast<int>(p.size())) {
+        for (int i = 0; i < static_cast<int>(p.size()); ++i)
+            if (!queued[i] && p[i].arrival <= time) {
+                ready.push(i);
+                queued[i] = true;
+            }
+        if (ready.empty()) {
+            ++time;
+            continue;
+        }
+        int i = ready.front();
+        ready.pop();
+        int slice = min(quantum, p[i].remaining);
+        p[i].remaining -= slice;
+        time += slice;
+        for (int j = 0; j < static_cast<int>(p.size()); ++j)
+            if (!queued[j] && p[j].arrival <= time) {
+                ready.push(j);
+                queued[j] = true;
+            }
+        if (p[i].remaining > 0) ready.push(i);
+        else {
+            p[i].completion = time;
+            ++completed;
+        }
+    }
+
+    double totalWaiting = 0, totalTurnaround = 0;
+    for (const auto& job : p) {
+        int turnaround = job.completion - job.arrival;
+        int waiting = turnaround - job.burst;
+        totalWaiting += waiting;
+        totalTurnaround += turnaround;
+        cout << "P" << job.id << ": CT=" << job.completion
+             << ", TAT=" << turnaround << ", WT=" << waiting << "\\n";
+    }
+    cout << fixed << setprecision(2)
+         << "Average WT: " << totalWaiting / p.size() << "\\n"
+         << "Average TAT: " << totalTurnaround / p.size() << "\\n";
+}`
+    }
+  };
+  let cppPractical = 'fcfs';
+
+  function renderCppGuide() {
+    const practical = CPP_PRACTICALS[cppPractical];
+    const steps = practical.steps.map(([number, title, description], index) => `<article class="cpp-step"><div class="cpp-step-number">${number}</div><div class="cpp-step-line"></div><div><h3>${title}</h3><p>${description}</p></div><span class="cpp-step-check">${index === practical.steps.length - 1 ? '✓' : '→'}</span></article>`).join('');
+    $('#appContent').innerHTML = `${heading('C++ / PRACTICAL NOTEBOOK','C++ Practical Guide','Understand the algorithm first, then use a clean C++ implementation in your OS practical file. Select a practical to update the visual explanation and code.', '<button class="btn" id="cppBackBtn">← Back to simulator</button>')}
+      <div class="cpp-toolbar panel"><div><span class="panel-kicker">SELECT PRACTICAL</span><label class="sr-only" for="cppPractical">Select C++ practical</label><select id="cppPractical">${Object.entries(CPP_PRACTICALS).map(([key, item]) => `<option value="${key}" ${key === cppPractical ? 'selected' : ''}>${item.label}</option>`).join('')}</select></div><span class="pill cyan">COMPILE WITH C++17</span></div>
+      <div class="cpp-layout"><div class="stack"><section class="panel cpp-overview"><div class="panel-header"><div><h2>${practical.label}</h2><p>${practical.summary}</p></div><span class="pill good">VISUAL WALKTHROUGH</span></div><div class="panel-body"><div class="cpp-steps">${steps}</div></div></section></div>
+        <section class="panel cpp-code-panel"><div class="panel-header"><div><h2>Complete C++17 code</h2><p>Copy this program into your compiler or practical record.</p></div><button class="btn" id="cppCopyBtn">Copy code</button></div><div class="code-window"><div class="code-window-bar"><span></span><span></span><span></span><small>main.cpp</small></div><pre><code id="cppCode">${esc(practical.code)}</code></pre></div></section></div>`;
+    $('#cppPractical')?.addEventListener('change', e => { cppPractical = e.target.value; renderCppGuide(); });
+    $('#cppBackBtn')?.addEventListener('click', () => setView('cpu'));
+    $('#cppCopyBtn')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(practical.code);
+        showToast('Code copied', 'The C++17 program is ready to paste into your compiler.');
+      } catch {
+        showToast('Copy unavailable', 'Select the code manually and copy it from the code panel.', 'error');
+      }
+    });
   }
 
   // ------------------------------- OS CONCEPTS -------------------------------
