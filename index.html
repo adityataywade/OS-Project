@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="description" content="OS Lab Studio — interactive visual labs for CPU scheduling, page replacement, disk scheduling, deadlock avoidance, semaphore synchronization, and file allocation." />
+  <title>OS Lab Studio — Operating Systems Simulator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#dashboard" aria-label="OS Lab Studio home">
+        <span class="brand-mark"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 39 12.5v17L24 38 9 29.5v-17L24 4Z"/><path d="M24 11.5 33 16.7v10.4L24 32.5 15 27.1V16.7l9-5.2Z"/><path d="M24 18v12M18.8 21l10.4 6M29.2 21l-10.4 6"/></svg></span>
+        <span class="brand-copy"><strong>OS Lab Studio</strong><small>INTERACTIVE SYSTEMS LAB</small></span>
+      </a>
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">⌂</span><span>Overview</span></button>
+        <button class="nav-item" data-view="cpu"><span class="nav-icon">▥</span><span>CPU Scheduling</span><span class="nav-count">06</span></button>
+        <button class="nav-item" data-view="memory"><span class="nav-icon">▤</span><span>Page Replacement</span><span class="nav-count">03</span></button>
+        <button class="nav-item" data-view="disk"><span class="nav-icon">◉</span><span>Disk Scheduling</span><span class="nav-count">06</span></button>
+        <button class="nav-item" data-view="banker"><span class="nav-icon">⛨</span><span>Deadlock Avoidance</span></button>
+        <button class="nav-item" data-view="sync"><span class="nav-icon">⇄</span><span>Synchronization</span><span class="nav-count">IPC</span></button>
+        <button class="nav-item" data-view="files"><span class="nav-icon">▦</span><span>File Allocation</span><span class="nav-count">FS</span></button>
+        <button class="nav-item" data-view="concepts"><span class="nav-icon">⌘</span><span>OS Concepts</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-card">
+          <div class="side-orbit"><span></span><span></span><span></span></div>
+          <div><strong>Lab mode enabled</strong><p>Explore algorithms with editable inputs and live results.</p></div>
+          <span class="online-dot"></span>
+        </div>
+        <div class="sidebar-foot"><span class="status-dot"></span> Runs locally in your browser <span class="version">v1.0</span></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Open navigation">☰</button>
+        <div class="breadcrumbs"><span>Workspace</span><span class="crumb-sep">/</span><strong id="pageCrumb">Overview</strong></div>
+        <div class="topbar-right"><span class="local-chip"><span class="status-dot"></span> LOCAL SIMULATION</span><button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to bright mode" aria-pressed="false" title="Switch to bright mode"><span class="theme-toggle-icon" aria-hidden="true">☀</span><span class="theme-toggle-label">Bright</span></button><button class="top-icon" id="helpBtn" aria-label="Project help" title="Project help">?</button><div class="avatar">OS</div></div>
+      </header>
+
+      <div class="content" id="appContent">
+        <!-- Rendered by app.js -->
+        <section class="loading-screen"><div class="loading-ring"></div><p>Preparing your lab environment…</p></section>
+      </div>
+      <footer class="app-footer"><span>OS LAB STUDIO</span><span>Operating Systems Mini Project · Learn by simulating</span><span>Student project built by <strong>Aditya Taywade</strong>, <strong>Aniket Belsare</strong>, <strong>Aniket Dhande</strong>, and <strong>Apurva Ghatol</strong></span></footer>
+    </main>
+  </div>
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+  <dialog class="help-dialog" id="helpDialog">
+    <div class="dialog-head"><div><span class="eyebrow">QUICK GUIDE</span><h2>Using OS Lab Studio</h2></div><button class="close-dialog" id="closeHelp" aria-label="Close help">×</button></div>
+    <div class="dialog-body">
+      <div class="guide-step"><span>01</span><div><strong>Choose a simulator</strong><p>Use the left navigation to open CPU scheduling, memory, disk, deadlock avoidance, semaphores, or file allocation.</p></div></div>
+      <div class="guide-step"><span>02</span><div><strong>Change the inputs</strong><p>Try the sample data first. You can edit process details, reference strings, cylinder requests, or resource matrices.</p></div></div>
+      <div class="guide-step"><span>03</span><div><strong>Run and interpret</strong><p>Use the Gantt chart, frame table, head path, and safety sequence to explain the algorithm in your viva.</p></div></div>
+      <div class="guide-note"><strong>Important:</strong> This is an educational simulator. It demonstrates OS algorithms; it does not modify your computer's actual scheduler, RAM, or disk.</div>
+    </div>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>
